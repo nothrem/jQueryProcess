@@ -47,7 +47,7 @@
 					return source;
 				},
 				promiseWith: function( obj ) {
-					return obj != null ? jQuery.extend( obj, promise ) : promise;
+					return obj !== null ? jQuery.extend( obj, promise ) : promise;
 				}
 			};
 		//var
