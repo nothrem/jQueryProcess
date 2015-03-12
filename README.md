@@ -105,3 +105,51 @@ Another Usage example:
 					})
 	; //doSomething(myValues)
 ```
+
+Using promise correctly:
+
+The Process.promise() method works as same as any jQuery method, i.e. it stores given value and returns it when called without param. As a result every time you call promise with an object, it will change scope for all the past and future callbacks registered with done(), fail() and progress().
+
+```JavaScript
+	scope = {value: 'Me'};
+
+	process = new $.Process();
+	process.promise(scope);
+
+	process.promise().done(function() {
+		alert('Promise ' + this.value);
+	});
+
+	process.promise({value: 'You'});
+
+	process.promiseWith(scope).done(function() {
+		alert('Promised by ' + this.value);
+	});
+
+	process.resolve(); //will alert 'Promise You' and 'Promised by You'
+
+	//
+```
+
+Note that method promiseWith will return promise bound to given object but will not change the stored scope. All handlers registered on promise created with promiseWith() will be called in scope of the last scope registered with promise()!
+
+Passing values via the promise:
+
+Since the promise is shared with all handlers, they can store values there and use its values:
+
+```JavaScript
+	process = new $.Process(); //no promise given, will use default one
+
+	process.done(function() {
+		alert('Promise ' + this.value);
+	});
+	process.progress(function(who) {
+		this.value = who;
+	});
+
+	process.notify('You');
+
+	process.resolve(); //will alert 'Promise You'
+
+	//
+```
