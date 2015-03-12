@@ -42,11 +42,12 @@
 					process.done( arguments ).fail( arguments );
 					return this;
 				},
-				// Get a promise for this process
-				// If obj is provided, the promise aspect is added to the object
 				promise: function( obj ) {
 					source = obj !== null ? jQuery.extend( obj, promise ) : promise;
 					return source;
+				},
+				promiseWith: function( obj ) {
+					return obj != null ? jQuery.extend( obj, promise ) : promise;
 				}
 			};
 		//var

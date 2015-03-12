@@ -57,6 +57,7 @@ Differences:
   * for Deferred you have to create own Closure by bind() or a function
 * Process does not support deprecated methods of jQuery (success, error, then and pipe). Only available methods are resolve, reject and notify for Process and done, fail and always for Promise.
   * alternative *With methods (resolveWith, rejectWith, notifyWith) are also available as fallover for Deferred - they don't work with stored promise.
+  * method Process.promiseWith() works the same as Deferred.promise()
   * Deferred's state() method is also available (do anyone actually use it?)
 
 
