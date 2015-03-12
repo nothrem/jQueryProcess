@@ -43,11 +43,27 @@
 					return this;
 				},
 				promise: function( obj ) {
-					source = obj !== null ? jQuery.extend( obj, promise ) : promise;
+					source = promise.promiseWith(obj);
 					return source;
 				},
 				promiseWith: function( obj ) {
 					return obj !== null ? jQuery.extend( obj, promise ) : promise;
+				},
+				ajax: function( obj ) {
+					promise.promise(obj);
+					return promise.ajaxWith(obj);
+				},
+				ajaxWith: function( obj ) {
+					var jqXHR = promise.promiseWith(obj);
+					jqXHR.success = jqXHR.done;
+					jqXHR.error = jqXHR.fail;
+					jqXHR.then = function(done, fail, progress) {
+						(!done || this.done(done));
+						(!fail || this.fail(fail));
+						(!progress || this.progress(progress));
+						return this;
+					};
+					return jqXHR;
 				}
 			};
 		//var
@@ -73,6 +89,13 @@
 			// process[ resolve | reject | notify ]
 			process[ tuple[0] ] = function() {
 				process[ tuple[0] + "With" ]( source , arguments );
+				return this;
+			};
+			process[ tuple[0] + "Ajax" ] = function() {
+				var args = arguments, jqXHR = promise.ajax();
+				if ('resolve' === tuple[0]) { args = [args[0], args[1], jqXHR]; }
+				else if ('reject' === tuple[0]) { args = [jqXHR, args[0], args[1]]; }
+				window.setTimeout(function() { process[ tuple[0] + "With" ]( jqXHR , args ); }, 1);
 				return this;
 			};
 			process[ tuple[0] + "With" ] = list.fireWith;

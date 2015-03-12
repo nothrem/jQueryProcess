@@ -1,5 +1,6 @@
 # jQueryProcess
-Improved jQuery Deferred that will always remember scope given into the promise.
+Improved jQuery Deferred that will always remember scope given into the promise and call the listeners so that they share the 'this' variable.
+As a bonus, it can supply replacement for $.ajax() return value derived from Deferred and allows to simulate successful or failed Ajax request.
 
 Passing promises in original $.Deferred:
 
@@ -127,8 +128,6 @@ The Process.promise() method works as same as any jQuery method, i.e. it stores 
 	});
 
 	process.resolve(); //will alert 'Promise You' and 'Promised by You'
-
-	//
 ```
 
 Note that method promiseWith will return promise bound to given object but will not change the stored scope. All handlers registered on promise created with promiseWith() will be called in scope of the last scope registered with promise()!
@@ -150,6 +149,42 @@ Since the promise is shared with all handlers, they can store values there and u
 	process.notify('You');
 
 	process.resolve(); //will alert 'Promise You'
-
-	//
 ```
+
+Using Process as $.ajax replacement:
+
+```JavaScript
+	$.api = function(method) {
+		var process = new $.Process();
+
+		if (!method || 'string' !== typeof method) {
+			return process.rejectAjax('Missing API method').ajax();
+		}
+
+		if ($.api.cache[method]) {
+			return process.resolveAjax($.api.cache[method]).ajax();
+		}
+
+		process.done(function(result) {
+			$.api.cache[method] = result;
+		});
+
+		return $.ajax({
+			url: '/api/' + method
+		}).success(process.resolve).error(process.reject);
+	}; //$.api()
+	$.api.cache = {};
+
+	$.api('translations')
+		.success(function(result) {
+			$('#title').text(result.title);
+		})
+		.error(xhr, message) {
+			alert(message);
+		}
+	;
+```
+
+With ajax() method, you can create jqXHR-compatible Promise to replace original $.ajax() return value. The jqXHR Promise (in addition to all Promise methods) support methods success(done), error(fail) and then(done, fail, progress).
+
+Methods resolveAjax() and rejectAjax() make sure the callbacks of success/done and error/fail get params in same order as from $.ajax() method, i.e. for success/done only first and second param of resolveAjax() is passed and the 3rd param is jqXHR (created with Process.ajax()); for error/fail first param is jqXHR and second and third params are the first and second params of rejectAjax().
