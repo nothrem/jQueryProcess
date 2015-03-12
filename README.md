@@ -47,17 +47,17 @@ Keeping scope with jquery.process:
 Differences:
 
 * jquery.process has correct OOP naming of methods:
-**  create new instance of Process with ```new $.Process()```
-**  use Factory to get instance of Process with ```$.ProcessFactory()```
-**  you can use ```instanceof``` of the created Process object
-*** note: Promise is always of the provided type or base object if no source given
-** $.Deferred seems to be class by its name but in fact it's a factory that creates untyped object based on basic Object class
+  *  create new instance of Process with ```new $.Process()```
+  *  use Factory to get instance of Process with ```$.ProcessFactory()```
+  *  you can use ```instanceof``` of the created Process object
+    * note: Promise is always of the provided type or base object if no source given
+  * $.Deferred seems to be class by its name but in fact it's a factory that creates untyped object based on basic Object class
 * simply calling process.promise() with an object will remember this object and provide it as scope for all done() and fail() callbacks
 * you can use Process' resolve(), reject() and notify() methods as callbacks for another Process, Deferred or any method that expect a callback
-** for Deferred you have to create own Closure by bind() or a function
+  * for Deferred you have to create own Closure by bind() or a function
 * Process does not support deprecated methods of jQuery (success, error, then and pipe). Only available methods are resolve, reject and notify for Process and done, fail and always for Promise.
-** alternative *With methods (resolveWith, rejectWith, notifyWith) are also available as fallover for Deferred - they don't work with stored promise.
-** Deferred's state() method is also available (do anyone actually use it?)
+  * alternative *With methods (resolveWith, rejectWith, notifyWith) are also available as fallover for Deferred - they don't work with stored promise.
+  * Deferred's state() method is also available (do anyone actually use it?)
 
 
 Another Usage example:
