@@ -11,6 +11,9 @@
     if (!$) { return; }
 
     $.Process = function( init ) {
+        if (!(this instanceof $.Process)) {
+            throw "Cannnot use Process constructor as a function!";
+        }
         $.ProcessFactory.call(this, {}, init);
     };
 
@@ -27,11 +30,11 @@
         }
 
         var tuples = [
-                // action, add listener, listener list, final state
+                // action, add listener, listener list, final state, listeners for process
                 // must be created every time because of the $.Callbacks()
-                [ "resolve", "done", $.Callbacks("once memory"), "resolved" ],
-                [ "reject", "fail", $.Callbacks("once memory"), "rejected" ],
-                [ "notify", "progress", $.Callbacks("memory") ]
+                [ "resolve", "done", $.Callbacks("once memory"), "resolved", $.Callbacks("once memory") ],
+                [ "reject", "fail", $.Callbacks("once memory"), "rejected", $.Callbacks("once memory") ],
+                [ "notify", "progress", $.Callbacks("memory"), undefined, $.Callbacks("memory") ]
             ],
             events = ['on', 'one', 'off', 'trigger', 'triggerHandler'],
             state = "pending",
@@ -48,7 +51,7 @@
                     return source;
                 },
                 promiseWith: function( obj ) {
-                    return obj !== null ? $.extend( obj, promise ) : promise;
+                    return obj ? $.extend( obj, promise ) : source;
                 },
                 ajax: function( obj ) {
                     promise.promise(obj);
@@ -72,17 +75,25 @@
         // Add event-specific methods
         $.each( events, function(i, method) {
             promise[method] = function() {
-                $.fn[method].apply($(source), arguments);
+                var me = (this === process ? process : source);
+                $.fn[method].apply($(me), arguments);
+                return this;
             };
         } );
 
         // Add list-specific methods
         $.each( tuples, function( i, tuple ) {
             var list = tuple[ 2 ],
+                listProc = tuple[ 4 ],
                 stateString = tuple[ 3 ];
 
             // promise[ done | fail | progress ] = list.add
-            promise[ tuple[1] ] = list.add;
+            promise[tuple[1]] = function() {
+                if (this === process) {
+                    return listProc.add.apply(listProc, arguments);
+                }
+                return list.add.apply(list, arguments);
+            };
 
             // Handle state
             if ( stateString ) {
@@ -109,15 +120,25 @@
             process[tuple[0] + "With"] = function(obj, args){
                 if ('notify' === tuple[0] && 'string' === typeof args[0]) {
                     args[0] = args[0].replace(' ', '_');
+                    $.fn.trigger.apply($(process), args);
                     $.fn.trigger.apply($(obj), args);
                 }
-                list.fireWith.apply(this, arguments);
+                listProc.fireWith(process, args);
+                list.fireWith(obj, args);
+                return this;
             };
         });
 
+        //allow to register callback for specific event
+        process.onCallback = function(event) {
+            return function() {
+                process.notify(event, arguments);
+            };
+        };
+
         // Make the process a promise
         promise.promise( process );
-        promise.promise( source !== null ? source : {});
+        promise.promise( source !== null && source !== undefined ? source : {});
 
         // Call given func if any
         if ( init ) {
