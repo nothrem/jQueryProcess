@@ -87,6 +87,9 @@ Another Usage example:
 		//register own handlers for the process
 		process.done(function() { console.log('Something is done'); });
 		process.fail(function() { console.log('Something has failed'); });
+		process.on('Waiting_for_AJAX', function(event, message) {
+			console.log('AJAX sent');
+		}
 
 		process.notify('Waiting for AJAX'); //report that we must wait for result
 
@@ -131,6 +134,7 @@ The Process.promise() method works as same as any jQuery method, i.e. it stores 
 ```
 
 Note that method promiseWith will return promise bound to given object but will not change the stored scope. All handlers registered on promise created with promiseWith() will be called in scope of the last scope registered with promise()!
+Promise now provide methods ```on```, ```one```, ```off```, ```trigger``` and ```triggerHandler``` available in jQuery for event listening. When a Process call ```notify('string')``` method, it can trigger both callbacks registered with process() and on() or one(). Handlers registered by on() or one() are called only when first param of notify is a string, then an event with given name is triggered. Also any spaces in the string are replaced with underscope (_) to allow event registering for string errors, e.g. after ```Promise.notify('Missing params')``` it will trigger handler registered with ```Promise.on('Missing_params', ...)```.
 
 Passing values via the promise:
 

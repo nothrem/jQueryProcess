@@ -33,6 +33,7 @@
                 [ "reject", "fail", $.Callbacks("once memory"), "rejected" ],
                 [ "notify", "progress", $.Callbacks("memory") ]
             ],
+            events = ['on', 'one', 'off', 'trigger', 'triggerHandler'],
             state = "pending",
             promise = {
                 state: function() {
@@ -68,6 +69,13 @@
             };
         //var
 
+        // Add event-specific methods
+        $.each( events, function(i, method) {
+            promise[method] = function() {
+                $.fn[method].apply($(source), arguments);
+            };
+        } );
+
         // Add list-specific methods
         $.each( tuples, function( i, tuple ) {
             var list = tuple[ 2 ],
@@ -98,7 +106,13 @@
                 window.setTimeout(function() { process[ tuple[0] + "With" ]( jqXHR , args ); }, 1);
                 return this;
             };
-            process[ tuple[0] + "With" ] = list.fireWith;
+            process[tuple[0] + "With"] = function(obj, args){
+                if ('notify' === tuple[0] && 'string' === typeof args[0]) {
+                    args[0] = args[0].replace(' ', '_');
+                    $.fn.trigger.apply($(obj), args);
+                }
+                list.fireWith.apply(this, arguments);
+            };
         });
 
         // Make the process a promise
