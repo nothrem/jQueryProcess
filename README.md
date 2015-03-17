@@ -159,6 +159,7 @@ However handlers registered by ```done()```, ```fail()``` and ```progress()``` o
 ```
 
 Promise also provide methods ```on()```, ```one()```, ```off()```, ```trigger()``` and ```triggerHandler()``` available in jQuery for event listening. When a Process call ```notify('string')``` method, it can trigger both callbacks registered with ```process()``` and ```on()``` or ```one()```. Handlers registered by ```on()``` or ```one()``` are called only when the first parameter of notify is a string. Then an event with given name is triggered. Any spaces in the string are replaced with underscope (_) to allow event registering for string errors, e.g. after ```Process.notify('Missing params')``` it will trigger handler registered with ```Promise.on('Missing_params', ...)```.
+Please note that ```Process.notify()``` works as both ```Deferred.notify()``` and ```jQuery.on()```. Calling Process.notify('test')``` will first trigger method ```Process.test()```, then it will trigger all handlers registered with ```Process.on('test') and last it will trigger all ```Process.progress()``` handlers.
 
 Passing values via the promise:
 
