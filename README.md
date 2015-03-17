@@ -182,6 +182,29 @@ Since the promise is shared with all handlers, they can store values there and u
 	process.resolve(); //will alert 'Promise You'
 ```
 
+Using different scope for handlers:
+
+```JavaScript
+	me = {value: 'me'};
+	you = {value: 'you'};
+
+	mainProcess = $.ProcessFactory(me);
+	slaveProcess = $.ProcessFactory(you);
+
+	f = function() { alert('Done ' + this.value); };
+
+	mainProcess.promise().done(f);
+	slaveProcess.promise().done(f);
+
+	mainProcess.sync(slaveProcess);
+
+	mainProcess.resolve(); //will alert 'Done me' and 'Done you'
+```
+
+Use method ```Process.sync()``` to synchronize two or more processes (with different promise objects). Once the main process is done or fails, synchronized processes will be resolved or rejected as well. Synchronized processes also recieve all progress events of the main process. Note that sync method is only one-way which means resolving or rejecting slave process will not affect the main process in any way.
+
+
+
 Using Process as ```$.ajax()``` replacement:
 
 ```JavaScript

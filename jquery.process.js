@@ -46,6 +46,13 @@
                     process.done( arguments ).fail( arguments );
                     return this;
                 },
+                sync: function(process) {
+                    promise
+                        .done(process.resolve)
+                        .fail(process.reject)
+                        .progress(process.notify);
+                    return source;
+                },
                 promise: function( obj ) {
                     source = promise.promiseWith(obj);
                     return source;
@@ -90,9 +97,12 @@
             // promise[ done | fail | progress ] = list.add
             promise[tuple[1]] = function() {
                 if (this === process) {
-                    return listProc.add.apply(listProc, arguments);
+                    listProc.add.apply(listProc, arguments);
                 }
-                return list.add.apply(list, arguments);
+                else {
+                    list.add.apply(list, arguments);
+                }
+                return this;
             };
 
             // Handle state
@@ -118,6 +128,7 @@
                 return this;
             };
             process[tuple[0] + "With"] = function(obj, args){
+                console.log('Process: ' + tuple[0] + ' on ', obj);
                 if ('notify' === tuple[0] && 'string' === typeof args[0]) {
                     args[0] = args[0].replace(' ', '_');
                     $.fn.trigger.apply($(process), args);
@@ -137,8 +148,8 @@
         };
 
         // Make the process a promise
-        promise.promise( process );
-        promise.promise( source !== null && source !== undefined ? source : {});
+        promise.promiseWith( process );
+        promise.promise( source ? source : {});
 
         // Call given func if any
         if ( init ) {
