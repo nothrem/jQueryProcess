@@ -128,7 +128,6 @@
                 return this;
             };
             process[tuple[0] + "With"] = function(obj, args){
-                console.log('Process: ' + tuple[0] + ' on ', obj);
                 if ('notify' === tuple[0] && 'string' === typeof args[0]) {
                     args[0] = args[0].replace(' ', '_');
                     $.fn.trigger.apply($(process), args);
@@ -143,7 +142,7 @@
         //allow to register callback for specific event
         process.onCallback = function(event) {
             return function() {
-                process.notify(event, arguments);
+                process.notify.apply(process, [event].concat(Array.prototype.slice.call(arguments)); //must convert arguments to array first, concat does not work on them!!!
             };
         };
 
