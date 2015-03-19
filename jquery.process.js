@@ -148,7 +148,7 @@
 
         // Make the process a promise
         promise.promiseWith( process );
-        promise.promise( source ? source : {});
+        promise.promise( source || {});
 
         // Call given func if any
         if ( init ) {
