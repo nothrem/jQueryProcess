@@ -68,13 +68,37 @@
                     var jqXHR = promise.promiseWith(obj);
                     jqXHR.success = jqXHR.done;
                     jqXHR.error = jqXHR.fail;
-                    jqXHR.then = function(done, fail, progress) {
-                        (!done || this.done(done));
-                        (!fail || this.fail(fail));
-                        (!progress || this.progress(progress));
-                        return this;
-                    };
                     return jqXHR;
+                },
+                //ECMAScript 2015 (ES6) compatible methods
+                all: function() {
+                    var promises = [];
+                    $.each(arguments, function() {
+                        var me = this;
+                        if (!me || 'function' !== typeof me.then) { return; }
+                        promises.push(me);
+                        me.then(function() {
+                            var pos = promises.indexOf(me);
+                            (pos < 0 || promises.splice(pos,1));
+                            (promises.length || process.resolve());
+                        }, process.reject);
+                    });
+                },
+                race: function() {
+                    $.each(arguments, function() {
+                        (!this || 'function' != typeof this.then
+                            || this.then(process.resolve, process.reject));
+                    });
+                },
+                then: function(done, fail, progress) {
+                    (!done || this.done(done));
+                    (!fail || this.fail(fail));
+                    (!progress || this.progress(progress));
+                    return this;
+                },
+                'catch': function(onRejected) {
+                    this.fail(onRejected);
+                    return this;
                 }
             };
         //var
@@ -128,6 +152,7 @@
                 return this;
             };
             process[tuple[0] + "With"] = function(obj, args){
+                if (state !== "pending") { return; } //already resolved, do not fire another event
                 if ('notify' === tuple[0] && 'string' === typeof args[0]) {
                     args[0] = args[0].replace(' ', '_');
                     $.fn.trigger.apply($(process), args);
@@ -142,7 +167,7 @@
         //allow to register callback for specific event
         process.onCallback = function(event) {
             return function() {
-                process.notify.apply(process, [event].concat(Array.prototype.slice.call(arguments))); //must convert arguments to array first, concat does not work on them!!!
+                process.notify.apply(process, [event].concat([].slice.call(arguments))); //must convert arguments to array first, concat does not work on them!!!
             };
         };
 

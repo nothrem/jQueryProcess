@@ -136,6 +136,8 @@ Note that method ```promiseWith()``` will return promise bound to given object b
 
 However handlers registered by ```done()```, ```fail()``` and ```progress()``` of the Process itself will be called in the scope of the Process. This allows the internal Process handlers to trigger another ```notify()```, ```resolve()``` or ```reject()```. Remember to use ```Process.promise()``` to access values shared in the promise.
 
+Methods ```then()``` and ```catch()``` are also available for compatibility with ECMAScript 2015 (ES6) Promises. Both methods can be called either on a process or a promise and return the original scope for chaining. The method ```then()``` accepts 3 parameters that bind to ```done()```, ```fail()``` and ```progress()``` (the same method in ES6 accept only 2 params for onFulfilled and onRejected). 
+
 ```JavaScript
 	process = new $.Process();
 
@@ -158,7 +160,7 @@ However handlers registered by ```done()```, ```fail()``` and ```progress()``` o
 	process.notify('finish'); //will alert "Process me", "Promise done with action finish" and "Promised by you"
 ```
 
-Promise also provide methods ```on()```, ```one()```, ```off()```, ```trigger()``` and ```triggerHandler()``` available in jQuery for event listening. When a Process call ```notify('string')``` method, it can trigger both callbacks registered with ```process()``` and ```on()``` or ```one()```. Handlers registered by ```on()``` or ```one()``` are called only when the first parameter of notify is a string. Then an event with given name is triggered. Any spaces in the string are replaced with underscope (_) to allow event registering for string errors, e.g. after ```Process.notify('Missing params')``` it will trigger handler registered with ```Promise.on('Missing_params', ...)```.
+Promise also provide methods ```on()```, ```one()```, ```off()```, ```trigger()``` and ```triggerHandler()``` available in jQuery for event listening. When a Process call ```notify('string')``` method, it can trigger both callbacks registered with ```progress()``` and ```on()``` or ```one()```. Handlers registered by ```on()``` or ```one()``` are called only when the first parameter of notify is a string. Then an event with given name is triggered. Any spaces in the string are replaced with underscope (_) to allow event registering for string errors, e.g. after ```Process.notify('Missing params')``` it will trigger handler registered with ```Promise.on('Missing_params', ...)```.
 Please note that ```Process.notify()``` works as both ```Deferred.notify()``` and ```jQuery.on()```. Calling Process.notify('test')``` will first trigger method ```Process.test()```, then it will trigger all handlers registered with ```Process.on('test') and last it will trigger all ```Process.progress()``` handlers.
 
 Passing values via the promise:
@@ -203,7 +205,27 @@ Using different scope for handlers:
 
 Use method ```Process.sync()``` to synchronize two or more processes (with different promise objects). Once the main process is done or fails, synchronized processes will be resolved or rejected as well. Synchronized processes also recieve all progress events of the main process. Note that sync method is only one-way which means resolving or rejecting slave process will not affect the main process in any way.
 
+Waiting for one or more other processes:
 
+```JavaScript
+	js = $.getScript('/my.js'); //returns ajax
+	css = $.get('/my.css'); //returns ajax
+    proc = $('el').translate('OK'); //return Process 
+
+	all = new $.Process();
+    all.done(function() { alert('All done'); });
+    all.fail(function() { alert('Something failed'); });
+    
+    first = new $.Process();
+    first.done(function() { alert('First one is done'); });
+    first.fail(function() { alert('First one has failed'); });
+
+	all.all(js, css, proc); //will alert 'All done' or 'Something failed'
+    first.race(js, css, proc);  //will alert 'First one is done' or 'First one has failed'
+```
+
+Methods ```all()``` and ```race()``` make current process resolved or rejected based on a result of one or all processes passed as parameters. Method ```all()``` waits until all processes are done and then resolves the main process, while method ```race()``` resolves as soon as any of the processes is resolved. Method ```all()``` rejects the main process if any of the processes fails. Method ```race()``` rejects the main process if first finished process fails. These methods are compatible with ECMAScript 2015 (ES6). As an processes is accepted another process (```$.Process```), jQuery deffered (```$.Deffered()```), jQuery ajax (```$.ajax()```), ES6 Promise (```new Promise()```) or any object with method ```then()```.  Any other params (including ```undefined``` and ```null```) are ignored and does not change the result.
+                                                                                                                                                                                                                            
 
 Using Process as ```$.ajax()``` replacement:
 
