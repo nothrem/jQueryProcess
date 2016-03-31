@@ -83,12 +83,14 @@
                             (promises.length || process.resolve());
                         }, process.reject);
                     });
+                    return this;
                 },
                 race: function() {
                     $.each(arguments, function() {
                         (!this || 'function' != typeof this.then
                             || this.then(process.resolve, process.reject));
                     });
+                    return this;
                 },
                 then: function(done, fail, progress) {
                     (!done || this.done(done));
