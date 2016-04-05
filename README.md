@@ -109,6 +109,10 @@ Another Usage example:
 	; //doSomething(myValues)
 ```
 
+Promise also provide methods ```on()```, ```one()```, ```off()```, ```trigger()``` and ```triggerHandler()``` available in jQuery for event listening. When a Process call ```notify('string')``` method, it can trigger both callbacks registered with ```progress()``` and ```on()``` or ```one()```. Handlers registered by ```on()``` or ```one()``` are called only when the first parameter of notify is a string. Then an event with given name is triggered. Any spaces in the string are replaced with underscope (_) to allow event registering for string errors, e.g. after ```Process.notify('Missing params')``` it will trigger handler registered with ```Promise.on('Missing_params', ...)```.
+Please note that ```Process.notify()``` works as both ```Deferred.notify()``` and ```jQuery.on()```. Calling Process.notify('test')``` will first trigger method ```Process.test()```, then it will trigger all handlers registered with ```Process.on('test') and last it will trigger all ```Process.progress()``` handlers.
+
+
 Using promise correctly:
 
 The ```Process.promise()``` method works as same as any jQuery method, i.e. it stores given value and returns it when called without param. As a result every time you call promise with an object, it will change scope for all the past and future callbacks registered with ```done()```, ```fail()``` and ```progress()```.
@@ -132,11 +136,31 @@ The ```Process.promise()``` method works as same as any jQuery method, i.e. it s
 	process.resolve(); //will alert 'Promise You' and 'Promised by You'
 ```
 
+Methods ```resolveWith()``` and ```rejectWith()``` change the bound object before resolving or rejecting the process so that all promise-registered handlers will be called in the scope of the new object.
+
+```JavaScript
+    //both blocks have the same functionality:
+    
+	process.promise(newScope);
+    process.resolve();
+    
+    process.resolveWith(newScope);
+```
+
+Once resolved or rejected, you cannot change the bound object by calling ```promise()``` method. All past and future handlers will be called in the scope of the last object being bound when the process was resolved or rejected! 
+
+```JavaScript
+    process = new $.Process();
+	process.promise({value:'me'}).done(function() {alert(this.value)});
+    process.resolveWith({value:'you'}); //will alert "you"                                 
+    
+    process.promise({value:'him'}).done(function() { alert(this.value)});
+    //will alert "you"; value "him" will not be saved because process is already resolved
+```
+
 Note that method ```promiseWith()``` will return promise bound to given object but will not change the stored scope. All handlers registered on promise created with ```promiseWith()``` will be called in scope of the last scope registered with ```promise()```!
 
 However handlers registered by ```done()```, ```fail()``` and ```progress()``` of the Process itself will be called in the scope of the Process. This allows the internal Process handlers to trigger another ```notify()```, ```resolve()``` or ```reject()```. Remember to use ```Process.promise()``` to access values shared in the promise.
-
-Methods ```then()``` and ```catch()``` are also available for compatibility with ECMAScript 2015 (ES6) Promises. Both methods can be called either on a process or a promise and return the original scope for chaining. The method ```then()``` accepts 3 parameters that bind to ```done()```, ```fail()``` and ```progress()``` (the same method in ES6 accept only 2 params for onFulfilled and onRejected). 
 
 ```JavaScript
 	process = new $.Process();
@@ -160,8 +184,25 @@ Methods ```then()``` and ```catch()``` are also available for compatibility with
 	process.notify('finish'); //will alert "Process me", "Promise done with action finish" and "Promised by you"
 ```
 
-Promise also provide methods ```on()```, ```one()```, ```off()```, ```trigger()``` and ```triggerHandler()``` available in jQuery for event listening. When a Process call ```notify('string')``` method, it can trigger both callbacks registered with ```progress()``` and ```on()``` or ```one()```. Handlers registered by ```on()``` or ```one()``` are called only when the first parameter of notify is a string. Then an event with given name is triggered. Any spaces in the string are replaced with underscope (_) to allow event registering for string errors, e.g. after ```Process.notify('Missing params')``` it will trigger handler registered with ```Promise.on('Missing_params', ...)```.
-Please note that ```Process.notify()``` works as both ```Deferred.notify()``` and ```jQuery.on()```. Calling Process.notify('test')``` will first trigger method ```Process.test()```, then it will trigger all handlers registered with ```Process.on('test') and last it will trigger all ```Process.progress()``` handlers.
+Promise with ES6:
+
+Methods ```then()``` and ```catch()``` are also available for compatibility with ECMAScript 2015 (ES6) Promises. Both methods can be called either on a process or a promise and return the original scope for chaining. The method ```then()``` accepts 3 parameters that bind to ```done()```, ```fail()``` and ```progress()``` (the same method in ES6 accept only 2 params for onFulfilled and onRejected). Note that working with ES6 promises is different from working with ```$.Process()``` even though they share these methods.  
+
+For the ```$.Process()``` to work correctly please do NOT use the new Arrow functions introduces in ECMAScript 2015 (ES6). The reason is that is is not possible to change the scope of the Arrow functions and they are always called in the scope of the function they were created in. Of course you can use the arrow functions if you know what you want to achieve. But remember that you cannot use ```this.promise()``` and other methods or the promise inside the Arrow function.
+
+```JavaScript
+(function() {
+    process = new $.Process();
+
+    process.promise({value:'me'})
+      .done(function(p) { alert(p + this.value); })
+      .done(p => alert(p + this.value))
+    ;
+
+    process.resolve('love ');
+}).call({value: 'you'});
+//will alert "love me" and "love you" because Arrow function is called in the scope of parent function instead of the promise!!!
+```
 
 Passing values via the promise:
 
