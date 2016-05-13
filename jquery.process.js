@@ -169,7 +169,7 @@
         //allow to register callback for specific event
         process.onCallback = function(event) {
             return function() {
-                process.notify.apply(process, [event].concat([].slice.call(arguments))); //must convert arguments to array first, concat does not work on them!!!
+                process.notify(event, arguments);
             };
         };
 
